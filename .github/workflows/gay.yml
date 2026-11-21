@@ -25,9 +25,9 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install Android NDK, CMake & Ninja
+      - name: Install Zsh, Android NDK, CMake & Ninja
         run: |
-          sudo apt-get update && sudo apt-get install -y ninja-build python3-pip
+          sudo apt-get update && sudo apt-get install -y zsh ninja-build python3-pip
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null 2>&1 || true
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.2.12479018" "cmake;3.22.1"
 
@@ -42,7 +42,7 @@ jobs:
           ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
         run: |
           chmod +x build.sh
-          ./build.sh "$GITHUB_WORKSPACE/pack_work"
+          zsh ./build.sh "$GITHUB_WORKSPACE/pack_work"
 
       - name: Build Debug APK
         working-directory: android/app
