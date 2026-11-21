@@ -20,15 +20,13 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install hooks
         run: sh peanuts/scripts/install-hooks.sh
 
       - name: Build Debug APK
         working-directory: android/app
         run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
           chmod +x gradlew || true
           if [ -f ./gradlew ]; then ./gradlew assembleDebug; else gradle assembleDebug; fi
 
