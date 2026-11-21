@@ -39,7 +39,7 @@ jobs:
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           echo "ndk.dir=$ANDROID_HOME/ndk/27.2.12479018" >> local.properties
           chmod +x gradlew || true
-          if [ -f ./gradlew ]; then ./gradlew assembleDebug -PusePackage=com.peanuts.nativeapp; else gradle assembleDebug -PusePackage=com.peanuts.nativeapp; fi
+          ./gradlew assembleDebug -PusePackage=com.peanuts.nativeapp -PusePackStyle=fake
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
