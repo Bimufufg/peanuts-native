@@ -31,7 +31,7 @@ jobs:
           sh peanuts/scripts/install-hooks.sh
 
       - name: Build Debug APK
-        working-directory: android
+        working-directory: android/app
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
           PE_PKG_NAME: com.peanuts.nativeapp
@@ -45,4 +45,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: peanuts-native-apk-full
-          path: android/**/build/outputs/apk/debug/*.apk
+          path: android/app/build/outputs/apk/debug/*.apk
