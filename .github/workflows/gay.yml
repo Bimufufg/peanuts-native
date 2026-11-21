@@ -38,23 +38,21 @@ jobs:
 
       - name: Build ondevice stage
         working-directory: android/ondevice
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
         run: |
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.2.12479018"
           chmod +x build.sh
           zsh ./build.sh "$GITHUB_WORKSPACE/pack_work"
 
       - name: Build Debug APK
         working-directory: android/app
-        env:
-          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
-          PE_PKG_NAME: com.github.bylaws.peanuts.native
-          PE_PACK_STAGE: ${{ github.workspace }}/pack_work/stage
         run: |
+          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.2.12479018"
+          export PE_PKG_NAME="com.github.bylaws.peanuts.native"
+          export PE_PACK_STAGE="$GITHUB_WORKSPACE/pack_work/stage"
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "ndk.dir=$ANDROID_HOME/ndk/27.2.12479018" >> local.properties
+          echo "ndk.dir=$ANDROID_NDK_HOME" >> local.properties
           chmod +x gradlew || true
-          ./gradlew assembleDebug -PusePackage=com.github.bylaws.peanuts.native -PusePackStage="$GITHUB_WORKSPACE/pack_work/stage" --stacktrace
+          ./gradlew assembleDebug -PusePackage=com.github.bylaws.peanuts.native -PusePackStage="$PE_PACK_STAGE" --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
