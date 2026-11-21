@@ -9,23 +9,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout full code
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Set up JDK 21
+      - name: Setup JDK 21 & .NET & Python
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Install Android NDK & CMake
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install Android NDK, CMake & Ninja
         run: |
+          sudo apt-get update && sudo apt-get install -y ninja-build python3-pip
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null 2>&1 || true
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.2.12479018" "cmake;3.22.1"
 
-      - name: Apply patches & Install hooks
+      - name: Apply user patches & Install hooks
         run: |
           for p in *.patch; do [ -f "$p" ] && git apply "$p" || true; done
           sh peanuts/scripts/install-hooks.sh
@@ -35,16 +41,14 @@ jobs:
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
           PE_PKG_NAME: com.peanuts.nativeapp
-          ORG_GRADLE_PROJECT_usePackage: com.peanuts.nativeapp
-          ORG_GRADLE_PROJECT_usePackagingStyle: fake
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           echo "ndk.dir=$ANDROID_HOME/ndk/27.2.12479018" >> local.properties
           chmod +x gradlew || true
-          ./gradlew assembleDebug -PusePackage=com.peanuts.nativeapp -PusePackagingStyle=fake
+          ./gradlew assembleDebug -PusePackage=com.peanuts.nativeapp -PusePackagingStyle=fake --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: peanuts-native-apk-full
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: android/**/build/outputs/apk/**/*.apk
