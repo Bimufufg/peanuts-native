@@ -1,0 +1,62 @@
+name: Build Peanuts Turbo 3 APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build patched APK for Redmi Turbo 3
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - name: Download the Fix Kit from this repository
+        uses: actions/checkout@v7
+        with:
+          path: fixkit
+          persist-credentials: false
+
+      - name: Get the exact Peanuts Native 0.1.6-1 source
+        uses: actions/checkout@v7
+        with:
+          repository: igawa6/peanuts-native
+          ref: v0.1.6-1
+          path: source
+          persist-credentials: false
+
+      - name: Install Linux build tools
+        run: | sudo apt-get update sudo apt-get install -y zsh cmake ninja-build build-essential patch curl git unzip python3-pip 
+      - name: Set up Java 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up .NET 10 SDK
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Install Android SDK platform and NDK
+        shell: bash
+        run: | sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358" SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/.android/sdk}}" echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV" echo "ANDROID_NDK_HOME=$SDK_ROOT/ndk/28.2.13676358" >> "$GITHUB_ENV" 
+      - name: Install Python build dependencies
+        run: python3 -m pip install --break-system-packages "capstone==5.0.7" "lz4==4.4.5" "zbic==1.0.1.post1"
+
+      - name: Apply the two-call-site fix and build the APK
+        shell: bash
+        run: | test -f fixkit/SparkingZERO_FMalloc_MultiCall_Fix.patch test -f fixkit/apply-and-build-turbo3.zsh NX_WORK="$RUNNER_TEMP/turbo3-work" zsh fixkit/apply-and-build-turbo3.zsh "$GITHUB_WORKSPACE/source" 
+      - name: Verify APK output
+        run: | test -s source/out/Peanuts-Turbo3-SparkingZERO-dev.apk sha256sum source/out/Peanuts-Turbo3-SparkingZERO-dev.apk 
+      - name: Upload APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: Peanuts-Turbo3-SparkingZERO-APK
+          path: source/out/Peanuts-Turbo3-SparkingZERO-dev.apk
+          if-no-files-found: error
+          retention-days: 7
