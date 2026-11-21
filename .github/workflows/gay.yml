@@ -25,9 +25,9 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Install Zsh, Android NDK, CMake & Ninja
+      - name: Install Android NDK, CMake & Ninja
         run: |
-          sudo apt-get update && sudo apt-get install -y zsh ninja-build python3-pip
+          sudo apt-get update && sudo apt-get install -y ninja-build python3-pip
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null 2>&1 || true
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.2.12479018" "cmake;3.22.1"
 
@@ -36,26 +36,20 @@ jobs:
           for p in *.patch; do [ -f "$p" ] && git apply "$p" || true; done
           sh peanuts/scripts/install-hooks.sh
 
-      - name: Build ondevice stage
-        working-directory: android/ondevice
-        run: |
-          export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.2.12479018"
-          chmod +x build.sh
-          zsh ./build.sh "$GITHUB_WORKSPACE/pack_work"
-
       - name: Build Debug APK
         working-directory: android/app
         run: |
           export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/27.2.12479018"
-          export PE_PKG_NAME="com.github.bylaws.peanuts.native"
-          export PE_PACK_STAGE="$GITHUB_WORKSPACE/pack_work/stage"
+          export NX_PKG_NAME="com.github.bylaws.nxnative"
+          export ORG_GRADLE_PROJECT_nxPackage="com.github.bylaws.nxnative"
+          export ORG_GRADLE_PROJECT_nxPackEngine="fake"
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           echo "ndk.dir=$ANDROID_NDK_HOME" >> local.properties
           chmod +x gradlew || true
-          ./gradlew assembleDebug -PusePackage=com.github.bylaws.peanuts.native -PusePackStage="$PE_PACK_STAGE" --stacktrace
+          ./gradlew assembleDebug -PnxPackage=com.github.bylaws.nxnative -PnxPackEngine=fake --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: peanuts-native-apk-full
+          name: nxnative-apk-full
           path: android/**/build/outputs/apk/**/*.apk
