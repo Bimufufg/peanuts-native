@@ -35,11 +35,13 @@ jobs:
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
           PE_PKG_NAME: com.peanuts.nativeapp
+          ORG_GRADLE_PROJECT_usePackage: com.peanuts.nativeapp
+          ORG_GRADLE_PROJECT_usePackagingStyle: fake
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           echo "ndk.dir=$ANDROID_HOME/ndk/27.2.12479018" >> local.properties
           chmod +x gradlew || true
-          ./gradlew assembleDebug -PusePackage=com.peanuts.nativeapp -PusePackStyle=fake
+          ./gradlew assembleDebug -PusePackage=com.peanuts.nativeapp -PusePackagingStyle=fake
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
