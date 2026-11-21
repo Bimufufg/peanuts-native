@@ -20,18 +20,29 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Install hooks
-        run: sh peanuts/scripts/install-hooks.sh
+      - name: Install Android NDK & CMake
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses >/dev/null 2>&1 || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.2.12479018" "cmake;3.22.1"
+
+      - name: Apply patches & Install hooks
+        run: |
+          for p in *.patch; do [ -f "$p" ] && git apply "$p" || true; done
+          sh peanuts/scripts/install-hooks.sh
 
       - name: Build Debug APK
-        working-directory: android/app
+        working-directory: android
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.2.12479018
+          PE_PKG_NAME: com.peanuts.nativeapp
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "ndk.dir=$ANDROID_HOME/ndk/27.2.12479018" >> local.properties
           chmod +x gradlew || true
-          if [ -f ./gradlew ]; then ./gradlew assembleDebug; else gradle assembleDebug; fi
+          if [ -f ./gradlew ]; then ./gradlew assembleDebug -PusePackage=com.peanuts.nativeapp; else gradle assembleDebug -PusePackage=com.peanuts.nativeapp; fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: peanuts-native-apk
-          path: android/app/build/outputs/apk/debug/*.apk
+          name: peanuts-native-apk-full
+          path: android/**/build/outputs/apk/debug/*.apk
